@@ -7,7 +7,10 @@ target_link_libraries(
 
 target_sources(6502++
 PUBLIC
+  common.h
   core.h
+  cpu.h
+  bit.h
 )
 
 add_executable(6502)
