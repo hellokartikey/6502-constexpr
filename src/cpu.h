@@ -14,13 +14,20 @@ class cpu6502 {
 
   auto load_program(instructions program) -> void;
 
-  auto fetch() -> byte;
+  constexpr auto fetch() -> byte { return read(PC++); }
 
-  auto read(word addr) -> byte;
-  auto read16(word addr) -> word;
+  constexpr auto read(word addr) -> byte { return memory.at(addr); }
 
-  auto write(word addr, byte data) -> void;
-  auto write16(word addr, word data) -> void;
+  constexpr auto read16(word addr) -> word {
+    return static_cast<word>(read(addr + 1) << 8 | read(addr));
+  }
+
+  constexpr auto write(word addr, byte data) -> void { memory.at(addr) = data; }
+
+  constexpr auto write16(word addr, word data) -> void {
+    memory.at(addr) = static_cast<byte>(data);
+    memory.at(addr + 1) = static_cast<byte>(data >> 8);
+  }
 
  private:
   byte A = 0x00;
