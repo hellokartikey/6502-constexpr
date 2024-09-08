@@ -29,18 +29,70 @@ class cpu6502 {
     memory.at(addr + 1) = static_cast<byte>(data >> 8);
   }
 
+  constexpr void IMP() { operand = A; }
+
+  constexpr void IMM() { address = PC++; }
+
+  constexpr void ZP0() { address = fetch() & 0x00ff; }
+
+  constexpr void ZPX() { address = (fetch() + X) & 0x00ff; }
+
+  constexpr void ZPY() { address = (fetch() + Y) & 0x00ff; }
+
+  constexpr void REL() { address_rel = to_signed(fetch()); }
+
+  constexpr void ABS() {
+    address = read16(PC);
+    PC += 2;
+  }
+
+  constexpr void ABX() {
+    address = read16(PC) + X;
+    PC += 2;
+  }
+
+  constexpr void ABY() {
+    address = read16(PC) + Y;
+    PC += 2;
+  }
+
+  constexpr void IND() {
+    auto ptr = read16(PC);
+    PC += 2;
+
+    if ((ptr & 0x00ff) == 0xff) {  // if ptr_lo == 0xff
+      address = (read(ptr & 0xff00) << 8) | read(ptr);
+    } else {  // expected behaviour
+      address = read16(ptr);
+    }
+  }
+
+  constexpr void IZX() {
+    auto ptr = fetch() + X;
+    address = (read((ptr + 1) & 0x00ff) << 8) | read(ptr & 0x00ff);
+  }
+
+  constexpr void IZY() {
+    auto ptr = fetch() + Y;
+    address = (read((ptr + 1) & 0x00ff) << 8) | read(ptr & 0x00ff);
+  }
+
  private:
+  byte operand = 0x00;
+  word address = 0x0000;
+  sbyte address_rel = 0x00;
+
   byte A = 0x00;
   byte X = 0x00;
   byte Y = 0x00;
   byte F = 0x00;
 
   word PC = 0x0000;
-  word SP = 0x0000;
+  byte SP = 0x0000;
 
   bit<byte, 7> N{F};
   bit<byte, 6> V{F};
-  // Always true
+  bit<byte, 5> U{F};  // Always true
   bit<byte, 4> B{F};
   bit<byte, 3> D{F};
   bit<byte, 2> I{F};
