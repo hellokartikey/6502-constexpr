@@ -1,31 +1,32 @@
 #ifndef CONSTEXPR_6502_BIT_H
 #define CONSTEXPR_6502_BIT_H
 
+#include <concepts>
 #include <cstddef>
 
-template <typename T, std::size_t idx>
+template <std::integral T, std::size_t idx>
 class bit {
   static_assert(idx < sizeof(T) * 8, "Index out of range...");
 
   using self = bit<T, idx>;
 
  public:
-  explicit bit(T& value) : m_value(&value) {}
+  explicit constexpr bit(T& value) : m_value(&value) {}
 
-  auto get() -> T& { return *m_value; };
-  [[nodiscard]] auto get() const -> T { return *m_value; };
+  constexpr auto get() -> T& { return *m_value; };
+  [[nodiscard]] constexpr auto get() const -> T { return *m_value; };
 
-  auto set() -> void { get() |= m_set_mask; }
-  auto reset() -> void { get() &= m_reset_mask; }
+  constexpr auto set() -> void { get() |= m_set_mask; }
+  constexpr auto reset() -> void { get() &= m_reset_mask; }
 
-  [[nodiscard]] auto value() const -> bool {
+  [[nodiscard]] constexpr auto value() const -> bool {
     return (get() & m_set_mask) >> idx;
   }
 
-  explicit operator bool() const { return value(); }
+  explicit constexpr operator bool() const { return value(); }
 
   template <typename U>
-  auto operator=(U value) -> self& {
+  constexpr auto operator=(U value) -> self& {
     if (value) {
       set();
     } else {
@@ -35,7 +36,7 @@ class bit {
     return *this;
   }
 
-  auto operator~() const -> bool { return !value(); }
+  constexpr auto operator~() const -> bool { return !value(); }
 
  private:
   T* m_value;
