@@ -1,10 +1,9 @@
 #ifndef CONSTEXPR_6502_BIT_H
 #define CONSTEXPR_6502_BIT_H
 
-#include <concepts>
 #include <cstddef>
 
-template <std::integral T, std::size_t idx>
+template <typename T, std::size_t idx>
 class bit {
   static_assert(idx < sizeof(T) * 8, "Index out of range...");
 
