@@ -12,7 +12,7 @@ using sbyte = std::int8_t;
 using instructions = std::initializer_list<byte>;
 
 template <typename T>
-auto to_signed(T value) -> std::make_signed_t<T> {
+constexpr auto to_signed(T value) -> std::make_signed_t<T> {
   using signed_t = std::make_signed_t<T>;
   using limit = std::numeric_limits<signed_t>;
 

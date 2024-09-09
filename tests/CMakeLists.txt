@@ -12,5 +12,11 @@ PRIVATE
   ${PROJECT_SOURCE_DIR}/src
 )
 
+target_sources(
+  test_6502
+PRIVATE
+  memory.cpp
+)
+
 include(GoogleTest)
 gtest_discover_tests(test_6502)
