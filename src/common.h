@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <initializer_list>
 #include <limits>
+#include <type_traits>
 
 using byte = std::uint8_t;
 using word = std::uint16_t;
