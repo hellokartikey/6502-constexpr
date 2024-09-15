@@ -1,5 +1,5 @@
 ---
-Checks: 'clang-diagnostic-*,clang-analyzer-*,bugprone-*,clang-analyzer-*,cppcoreguidelines-*,google-*,hicpp-*,modernize-*,performance-*,portability-*,readability-*,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-hicpp-signed-bitwise,-readability-convert-member-functions-to-static'
+Checks: 'clang-diagnostic-*,clang-analyzer-*,bugprone-*,clang-analyzer-*,cppcoreguidelines-*,google-*,hicpp-*,modernize-*,performance-*,portability-*,readability-*,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-hicpp-signed-bitwise,-readability-convert-member-functions-to-static,-cppcoreguidelines-pro-type-union-access'
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''

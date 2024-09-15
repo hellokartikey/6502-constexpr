@@ -1,20 +1,27 @@
-#include <core.h>
 #include <gtest/gtest.h>
 
-class MemoryAPIFixture : public testing::Test {
- protected:
-  cpu6502 cpu;
-};
+#include "core.h"
+#include "test.h"
 
-TEST_F(MemoryAPIFixture, ReadByte) {
-  cpu.write(0x1000, 0x64);
-  EXPECT_EQ(cpu.read(0x1000), 0x64);
+constexpr auto run() {
+  cpu6502 emu;
+
+  emu.write(0x1000, 0x64);
+  emu.write16(0x2000, 0x1234);
+
+  return emu;
 }
 
-TEST_F(MemoryAPIFixture, ReadWord) {
-  cpu.write16(0x1000, 0x1234);
+TEST(MemoryAPIFixture, ReadByte) {
+  constexpr auto cpu = run();
 
-  EXPECT_EQ(cpu.read(0x1000), 0x34);
-  EXPECT_EQ(cpu.read(0x1001), 0x12);
-  EXPECT_EQ(cpu.read16(0x1000), 0x1234);
+  HK_TEST(cpu.read(0x1000) == 0x64);
+}
+
+TEST(MemoryAPIFixture, ReadWord) {
+  constexpr auto cpu = run();
+
+  HK_TEST(cpu.read(0x2000) == 0x34);
+  HK_TEST(cpu.read(0x2001) == 0x12);
+  HK_TEST(cpu.read16(0x2000) == 0x1234);
 }

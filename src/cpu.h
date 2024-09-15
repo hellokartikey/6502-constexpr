@@ -16,9 +16,11 @@ class cpu6502 {
 
   constexpr auto fetch() -> byte { return read(PC++); }
 
-  constexpr auto read(word addr) -> byte { return memory.at(addr); }
+  [[nodiscard]] constexpr auto read(word addr) const -> byte {
+    return memory.at(addr);
+  }
 
-  constexpr auto read16(word addr) -> word {
+  [[nodiscard]] constexpr auto read16(word addr) const -> word {
     return static_cast<word>(read(addr + 1) << 8 | read(addr));
   }
 
@@ -85,19 +87,23 @@ class cpu6502 {
   byte A = 0x00;
   byte X = 0x00;
   byte Y = 0x00;
-  byte F = 0x00;
 
   word PC = 0x0000;
-  byte SP = 0x0000;
+  byte SP = 0x00;
 
-  bit<byte, 7> N{F};
-  bit<byte, 6> V{F};
-  bit<byte, 5> U{F};  // Always true
-  bit<byte, 4> B{F};
-  bit<byte, 3> D{F};
-  bit<byte, 2> I{F};
-  bit<byte, 1> Z{F};
-  bit<byte, 0> C{F};
+  union {
+    byte F = 0x00;
+    struct {
+      byte N : 1;
+      byte V : 1;
+      byte U : 1;
+      byte B : 1;
+      byte D : 1;
+      byte I : 1;
+      byte Z : 1;
+      byte C : 1;
+    };
+  };
 
   std::array<byte, 0x10000> memory{};
 };
