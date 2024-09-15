@@ -7,6 +7,7 @@
 
 class cpu6502 {
  public:
+  constexpr cpu6502(){};
   auto reset() -> void;
   auto exec() -> void;
   auto exec_n(int value = 1) -> void;
