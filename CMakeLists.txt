@@ -7,6 +7,7 @@ option(CLANG_TIDY "Enable clang-tidy static analysis" ON)
 option(CLANG_FORMAT "Enable clang-format source code formatting" ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(CMAKE_MAKE_PROGRAM make)
 
 include(fetchFmt)
 

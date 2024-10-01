@@ -413,6 +413,77 @@ class cpu6502 {
     PC++;
   }
 
+  // Subtract with Carry
+  constexpr void SBC() {
+    // Operating in 16-bit domain to capture carry out
+    // We can invert the bottom 8 bits with bitwise xor
+    byte fetched = read(address);
+    word value = ((word)fetched) ^ 0x00FF;
+    word temp = (word)A + value + (word)C;
+
+    C = temp & 0xFF00;
+    Z = ((temp & 0x00FF) == 0);
+    V = (temp ^ (word)A) & (temp ^ value) & 0x0080;
+    N = temp & 0x0080;
+    A = temp & 0x00FF;
+  }
+
+  // Set Carry Flag
+  constexpr void SEC() { C = true; }
+
+  // Set Decimal Flag
+  constexpr void SED() { D = true; }
+
+  // Set Interrupt Disable
+  constexpr void SEI() { I = true; }
+
+  // Store Accumulator
+  constexpr void STA() { write(address, A); }
+
+  // Store X Register
+  constexpr void STX() { write(address, X); }
+
+  // Store Y Register
+  constexpr void STY() { write(address, Y); }
+
+  // Transfer Accumulator to X
+  constexpr void TAX() {
+    X = A;
+    Z = X == 0x00;
+    N = X & 0x80;
+  }
+
+  // Transfer Accumulator to Y
+  constexpr void TAY() {
+    Y = A;
+    Z = Y == 0x00;
+    N = Y & 0x80;
+  }
+
+  // Transfer Stack Pointer to X
+  constexpr void TSX() {
+    X = SP;
+    Z = X == 0x00;
+    N = X & 0x80;
+  }
+
+  // Transfer X to Accumulator
+  constexpr void TXA() {
+    A = X;
+    Z = A == 0x00;
+    N = A & 0x80;
+  }
+
+  // Transfer X to Stack Pointer
+  constexpr void TXS() { SP = X; }
+
+  // Transfer Y to Accumulator
+  constexpr void TYA() {
+    A = Y;
+    Z = A == 0x00;
+    N = A & 0x80;
+  }
+
  private:
   byte operand = 0x00;
   word address = 0x0000;
