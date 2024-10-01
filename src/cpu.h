@@ -291,6 +291,128 @@ class cpu6502 {
     N = Y & 0x80;
   }
 
+  // Opcodes
+
+  constexpr void JMP() { PC = address; }
+
+  constexpr void JSR() {
+    PC--;
+    write16(0x0100 + SP, PC);
+    SP -= 2;
+    PC = address;
+  }
+
+  constexpr void LDA() {
+    A = operand;
+    Z = A == 0x00;
+    N = A & 0x80;
+  }
+
+  constexpr void LDX() {
+    X = operand;
+    Z = X == 0x00;
+    N = X & 0x80;
+  }
+
+  constexpr void LDY() {
+    Y = operand;
+    Z = Y == 0x00;
+    N = Y & 0x80;
+  }
+
+  constexpr void LSR() {
+    C = operand & 0x1;
+    byte temp = fetched >> 1;
+    Z = temp == 0x00;
+    N = temp & 0x80;
+
+    if (lookup[opcode].addr == &cpu6502::IMP) {
+      A = temp;
+    } else {
+      write(address, temp);
+    }
+  }
+
+  constexpr void NOP() { return; }
+
+  constexpr void ORA() {
+    A = A | operand;
+    Z = A == 0x00;
+    N = A  & 0x80;
+  }
+
+  constexpr void PHA() {
+    write(0x0100 + SP, A);
+    SP--;
+  }
+
+  constexpr void PHP() {
+    B = 1;
+    U = 1;
+
+    write(0x0100 + SP, F);
+    SP--;
+
+    B = 0;
+    U = 0;
+  }
+
+  constepxr void PLA() {
+    SP++;
+    A = read(0x100 + SP);
+    Z = A == 0x00;
+    N = A & 0x80;
+  }
+
+  constepxr void PLP() {
+    SP++;
+    F = read(0x0100 + SP);
+    U == 1;
+  }
+
+  constexpr void ROL() {
+    byte temp = (operand << 1) | C;
+    C = temp & 0xff00;
+    Z = (temp & 0xff) == 0x00;
+    N = temp & 0x80;
+
+    if (lookup[opcode].addrmode == &cpu6502::IMP) {
+      A = temp & 0xff;
+    } else {
+      write(address, temp & 0xff);
+    }
+  }
+
+  constexpr void ROR() {
+    word temp = (C << 7) | (operand >> 1);
+    C = operand & 0x01;
+    Z = (temp & 0xff) == 0x00;
+    N = (temp & 0x80;
+
+    if (lookup[opcode].addrmode == &cpu6502::IMP) {
+      A = temp & 0xff;
+    } else {
+      write(address, temp & 0xff);
+    }
+  }
+
+  constexpr void RTI() {
+    SP++;
+    F = read(0x0100 + SP);
+    B = 0;
+    U = 0;
+
+    SP++;
+    PC = read16(0x0100 + SP);
+  }
+
+  constexpr void RTS() {
+    SP++;
+    PC = read16(0x0100 + SP);
+
+    PC++;
+  }
+
  private:
   byte operand = 0x00;
   word address = 0x0000;
