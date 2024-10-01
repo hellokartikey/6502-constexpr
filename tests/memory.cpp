@@ -13,7 +13,13 @@ constexpr auto run() {
 }
 
 TEST(MemoryAPIFixture, ReadByte) {
-  constexpr auto cpu = run();
+  constexpr auto cpu = [] {
+    cpu6502 emu;
+
+    emu.write(0x1000, 0x64);
+
+    return emu;
+  }();
 
   HK_TEST(cpu.read(0x1000) == 0x64);
 }
