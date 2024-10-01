@@ -10,9 +10,25 @@ class cpu6502 {
  public:
   constexpr cpu6502(){};
   auto reset() -> void;
-  auto exec() -> void;
-  auto exec_n(int value = 1) -> void;
-  auto exec_all() -> void;
+
+  auto exec() -> void {
+    auto code = fetch();
+
+    U = true;
+
+    (*lookup[code].addrmode)();
+    (*lookup[code].operate)();
+
+    U = true;
+  }
+
+  auto exec_n(int value = 1) -> void {
+    while (value-- > 0) { exec(); }
+  }
+
+  auto exec_all() -> void {
+    while (true) { exec(); }
+  }
 
   auto load_program(instructions program) -> void;
 
