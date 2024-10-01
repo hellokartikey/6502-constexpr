@@ -16,7 +16,7 @@ class cpu6502 {
 
   auto load_program(instructions program) -> void;
 
-  constexpr auto fetch() -> byte { return read(PC++); }
+  constexpr auto fetch() -> byte { return opcode = read(PC++); }
 
   [[nodiscard]] constexpr auto read(word addr) const -> byte {
     return memory.at(addr);
@@ -114,11 +114,10 @@ class cpu6502 {
     Z = (temp & 0x00FF) == 0x00;
     N = temp & 0x80;
 
-    // TODO: Uncomment the following lines after implementing lookup table.
-    // if (lookup[fetch()].addrmode == &IMP)
-    //   A = temp & 0x00FF;
-    // else
-    //   write(address, temp & 0x00FF);
+    if (lookup[opcode].addrmode == &cpu6502::IMP)
+      A = temp & 0x00FF;
+    else
+      write(address, temp & 0x00FF);
   }
 
   // Branch if Carry Clear
@@ -321,12 +320,13 @@ class cpu6502 {
   }
 
   constexpr void LSR() {
+    byte fetched = read(address);
     C = operand & 0x1;
     byte temp = fetched >> 1;
     Z = temp == 0x00;
     N = temp & 0x80;
 
-    if (lookup[opcode].addr == &cpu6502::IMP) {
+    if (lookup[opcode].addrmode == &cpu6502::IMP) {
       A = temp;
     } else {
       write(address, temp);
@@ -338,7 +338,7 @@ class cpu6502 {
   constexpr void ORA() {
     A = A | operand;
     Z = A == 0x00;
-    N = A  & 0x80;
+    N = A & 0x80;
   }
 
   constexpr void PHA() {
@@ -357,14 +357,14 @@ class cpu6502 {
     U = 0;
   }
 
-  constepxr void PLA() {
+  constexpr void PLA() {
     SP++;
     A = read(0x100 + SP);
     Z = A == 0x00;
     N = A & 0x80;
   }
 
-  constepxr void PLP() {
+  constexpr void PLP() {
     SP++;
     F = read(0x0100 + SP);
     U == 1;
@@ -387,7 +387,7 @@ class cpu6502 {
     word temp = (C << 7) | (operand >> 1);
     C = operand & 0x01;
     Z = (temp & 0xff) == 0x00;
-    N = (temp & 0x80;
+    N = temp & 0x80;
 
     if (lookup[opcode].addrmode == &cpu6502::IMP) {
       A = temp & 0xff;
@@ -486,6 +486,7 @@ class cpu6502 {
 
  private:
   byte operand = 0x00;
+  byte opcode = 0x00;
   word address = 0x0000;
   sbyte address_rel = 0x00;
 
@@ -512,34 +513,33 @@ class cpu6502 {
 
   std::array<byte, 0x10000> memory{};
 
-  /*struct INSTRUCTION {*/
-  /*  std::string_view name;*/
-  /*  std::function<void(void)> operate;*/
-  /*  std::function<void(void)> addrmode;*/
-  /*};*/
+  struct INSTRUCTION {
+    std::string_view name;
+    void (cpu6502::*operate)(void) = nullptr;
+    void (cpu6502::*addrmode)(void) = nullptr;
+  };
+
+  using _ = cpu6502;
 
   // clang-format off
-  // TODO: Uncomment the following lines after implementing all functions of lookup table. 
-  /** 
-  std::array<INSTRUCTION, 0x100> lookup = {
-		{ "BRK", BRK, IMM },{ "ORA", ORA, IZX },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "ORA", ORA, ZP0 },{ "ASL", ASL, ZP0 },{ "???", XXX, IMP },{ "PHP", PHP, IMP },{ "ORA", ORA, IMM },{ "ASL", ASL, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "ORA", ORA, ABS },{ "ASL", ASL, ABS },{ "???", XXX, IMP },
-		{ "BPL", BPL, REL },{ "ORA", ORA, IZY },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "ORA", ORA, ZPX },{ "ASL", ASL, ZPX },{ "???", XXX, IMP },{ "CLC", CLC, IMP },{ "ORA", ORA, ABY },{ "???", NOP, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "ORA", ORA, ABX },{ "ASL", ASL, ABX },{ "???", XXX, IMP },
-		{ "JSR", JSR, ABS },{ "AND", AND, IZX },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "BIT", BIT, ZP0 },{ "AND", AND, ZP0 },{ "ROL", ROL, ZP0 },{ "???", XXX, IMP },{ "PLP", PLP, IMP },{ "AND", AND, IMM },{ "ROL", ROL, IMP },{ "???", XXX, IMP },{ "BIT", BIT, ABS },{ "AND", AND, ABS },{ "ROL", ROL, ABS },{ "???", XXX, IMP },
-		{ "BMI", BMI, REL },{ "AND", AND, IZY },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "AND", AND, ZPX },{ "ROL", ROL, ZPX },{ "???", XXX, IMP },{ "SEC", SEC, IMP },{ "AND", AND, ABY },{ "???", NOP, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "AND", AND, ABX },{ "ROL", ROL, ABX },{ "???", XXX, IMP },
-		{ "RTI", RTI, IMP },{ "EOR", EOR, IZX },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "EOR", EOR, ZP0 },{ "LSR", LSR, ZP0 },{ "???", XXX, IMP },{ "PHA", PHA, IMP },{ "EOR", EOR, IMM },{ "LSR", LSR, IMP },{ "???", XXX, IMP },{ "JMP", JMP, ABS },{ "EOR", EOR, ABS },{ "LSR", LSR, ABS },{ "???", XXX, IMP },
-		{ "BVC", BVC, REL },{ "EOR", EOR, IZY },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "EOR", EOR, ZPX },{ "LSR", LSR, ZPX },{ "???", XXX, IMP },{ "CLI", CLI, IMP },{ "EOR", EOR, ABY },{ "???", NOP, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "EOR", EOR, ABX },{ "LSR", LSR, ABX },{ "???", XXX, IMP },
-		{ "RTS", RTS, IMP },{ "ADC", ADC, IZX },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "ADC", ADC, ZP0 },{ "ROR", ROR, ZP0 },{ "???", XXX, IMP },{ "PLA", PLA, IMP },{ "ADC", ADC, IMM },{ "ROR", ROR, IMP },{ "???", XXX, IMP },{ "JMP", JMP, IND },{ "ADC", ADC, ABS },{ "ROR", ROR, ABS },{ "???", XXX, IMP },
-		{ "BVS", BVS, REL },{ "ADC", ADC, IZY },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "ADC", ADC, ZPX },{ "ROR", ROR, ZPX },{ "???", XXX, IMP },{ "SEI", SEI, IMP },{ "ADC", ADC, ABY },{ "???", NOP, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "ADC", ADC, ABX },{ "ROR", ROR, ABX },{ "???", XXX, IMP },
-		{ "???", NOP, IMP },{ "STA", STA, IZX },{ "???", NOP, IMP },{ "???", XXX, IMP },{ "STY", STY, ZP0 },{ "STA", STA, ZP0 },{ "STX", STX, ZP0 },{ "???", XXX, IMP },{ "DEY", DEY, IMP },{ "???", NOP, IMP },{ "TXA", TXA, IMP },{ "???", XXX, IMP },{ "STY", STY, ABS },{ "STA", STA, ABS },{ "STX", STX, ABS },{ "???", XXX, IMP },
-		{ "BCC", BCC, REL },{ "STA", STA, IZY },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "STY", STY, ZPX },{ "STA", STA, ZPX },{ "STX", STX, ZPY },{ "???", XXX, IMP },{ "TYA", TYA, IMP },{ "STA", STA, ABY },{ "TXS", TXS, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "STA", STA, ABX },{ "???", XXX, IMP },{ "???", XXX, IMP },
-		{ "LDY", LDY, IMM },{ "LDA", LDA, IZX },{ "LDX", LDX, IMM },{ "???", XXX, IMP },{ "LDY", LDY, ZP0 },{ "LDA", LDA, ZP0 },{ "LDX", LDX, ZP0 },{ "???", XXX, IMP },{ "TAY", TAY, IMP },{ "LDA", LDA, IMM },{ "TAX", TAX, IMP },{ "???", XXX, IMP },{ "LDY", LDY, ABS },{ "LDA", LDA, ABS },{ "LDX", LDX, ABS },{ "???", XXX, IMP },
-		{ "BCS", BCS, REL },{ "LDA", LDA, IZY },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "LDY", LDY, ZPX },{ "LDA", LDA, ZPX },{ "LDX", LDX, ZPY },{ "???", XXX, IMP },{ "CLV", CLV, IMP },{ "LDA", LDA, ABY },{ "TSX", TSX, IMP },{ "???", XXX, IMP },{ "LDY", LDY, ABX },{ "LDA", LDA, ABX },{ "LDX", LDX, ABY },{ "???", XXX, IMP },
-		{ "CPY", CPY, IMM },{ "CMP", CMP, IZX },{ "???", NOP, IMP },{ "???", XXX, IMP },{ "CPY", CPY, ZP0 },{ "CMP", CMP, ZP0 },{ "DEC", DEC, ZP0 },{ "???", XXX, IMP },{ "INY", INY, IMP },{ "CMP", CMP, IMM },{ "DEX", DEX, IMP },{ "???", XXX, IMP },{ "CPY", CPY, ABS },{ "CMP", CMP, ABS },{ "DEC", DEC, ABS },{ "???", XXX, IMP },
-		{ "BNE", BNE, REL },{ "CMP", CMP, IZY },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "CMP", CMP, ZPX },{ "DEC", DEC, ZPX },{ "???", XXX, IMP },{ "CLD", CLD, IMP },{ "CMP", CMP, ABY },{ "NOP", NOP, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "CMP", CMP, ABX },{ "DEC", DEC, ABX },{ "???", XXX, IMP },
-		{ "CPX", CPX, IMM },{ "SBC", SBC, IZX },{ "???", NOP, IMP },{ "???", XXX, IMP },{ "CPX", CPX, ZP0 },{ "SBC", SBC, ZP0 },{ "INC", INC, ZP0 },{ "???", XXX, IMP },{ "INX", INX, IMP },{ "SBC", SBC, IMM },{ "NOP", NOP, IMP },{ "???", SBC, IMP },{ "CPX", CPX, ABS },{ "SBC", SBC, ABS },{ "INC", INC, ABS },{ "???", XXX, IMP },
-		{ "BEQ", BEQ, REL },{ "SBC", SBC, IZY },{ "???", XXX, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "SBC", SBC, ZPX },{ "INC", INC, ZPX },{ "???", XXX, IMP },{ "SED", SED, IMP },{ "SBC", SBC, ABY },{ "NOP", NOP, IMP },{ "???", XXX, IMP },{ "???", NOP, IMP },{ "SBC", SBC, ABX },{ "INC", INC, ABX },{ "???", XXX, IMP },
-	};
-  */
+  std::array<INSTRUCTION, 0x100> lookup = {{
+		{ "BRK", &_::BRK, &_::IMM },{ "ORA", &_::ORA, &_::IZX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ZP0 },{ "ASL", &_::ASL, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "PHP", &_::PHP, &_::IMP },{ "ORA", &_::ORA, &_::IMM },{ "ASL", &_::ASL, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ABS },{ "ASL", &_::ASL, &_::ABS },{ "???", &_::NOP, &_::IMP },
+		{ "BPL", &_::BPL, &_::REL },{ "ORA", &_::ORA, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ZPX },{ "ASL", &_::ASL, &_::ZPX },{ "???", &_::NOP, &_::IMP },{ "CLC", &_::CLC, &_::IMP },{ "ORA", &_::ORA, &_::ABY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ABX },{ "ASL", &_::ASL, &_::ABX },{ "???", &_::NOP, &_::IMP },
+		{ "JSR", &_::JSR, &_::ABS },{ "AND", &_::AND, &_::IZX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "BIT", &_::BIT, &_::ZP0 },{ "AND", &_::AND, &_::ZP0 },{ "ROL", &_::ROL, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "PLP", &_::PLP, &_::IMP },{ "AND", &_::AND, &_::IMM },{ "ROL", &_::ROL, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "BIT", &_::BIT, &_::ABS },{ "AND", &_::AND, &_::ABS },{ "ROL", &_::ROL, &_::ABS },{ "???", &_::NOP, &_::IMP },
+		{ "BMI", &_::BMI, &_::REL },{ "AND", &_::AND, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "AND", &_::AND, &_::ZPX },{ "ROL", &_::ROL, &_::ZPX },{ "???", &_::NOP, &_::IMP },{ "SEC", &_::SEC, &_::IMP },{ "AND", &_::AND, &_::ABY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "AND", &_::AND, &_::ABX },{ "ROL", &_::ROL, &_::ABX },{ "???", &_::NOP, &_::IMP },
+		{ "RTI", &_::RTI, &_::IMP },{ "EOR", &_::EOR, &_::IZX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "EOR", &_::EOR, &_::ZP0 },{ "LSR", &_::LSR, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "PHA", &_::PHA, &_::IMP },{ "EOR", &_::EOR, &_::IMM },{ "LSR", &_::LSR, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "JMP", &_::JMP, &_::ABS },{ "EOR", &_::EOR, &_::ABS },{ "LSR", &_::LSR, &_::ABS },{ "???", &_::NOP, &_::IMP },
+		{ "BVC", &_::BVC, &_::REL },{ "EOR", &_::EOR, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "EOR", &_::EOR, &_::ZPX },{ "LSR", &_::LSR, &_::ZPX },{ "???", &_::NOP, &_::IMP },{ "CLI", &_::CLI, &_::IMP },{ "EOR", &_::EOR, &_::ABY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "EOR", &_::EOR, &_::ABX },{ "LSR", &_::LSR, &_::ABX },{ "???", &_::NOP, &_::IMP },
+		{ "RTS", &_::RTS, &_::IMP },{ "ADC", &_::ADC, &_::IZX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ADC", &_::ADC, &_::ZP0 },{ "ROR", &_::ROR, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "PLA", &_::PLA, &_::IMP },{ "ADC", &_::ADC, &_::IMM },{ "ROR", &_::ROR, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "JMP", &_::JMP, &_::IND },{ "ADC", &_::ADC, &_::ABS },{ "ROR", &_::ROR, &_::ABS },{ "???", &_::NOP, &_::IMP },
+		{ "BVS", &_::BVS, &_::REL },{ "ADC", &_::ADC, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ADC", &_::ADC, &_::ZPX },{ "ROR", &_::ROR, &_::ZPX },{ "???", &_::NOP, &_::IMP },{ "SEI", &_::SEI, &_::IMP },{ "ADC", &_::ADC, &_::ABY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ADC", &_::ADC, &_::ABX },{ "ROR", &_::ROR, &_::ABX },{ "???", &_::NOP, &_::IMP },
+		{ "???", &_::NOP, &_::IMP },{ "STA", &_::STA, &_::IZX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "STY", &_::STY, &_::ZP0 },{ "STA", &_::STA, &_::ZP0 },{ "STX", &_::STX, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "DEY", &_::DEY, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "TXA", &_::TXA, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "STY", &_::STY, &_::ABS },{ "STA", &_::STA, &_::ABS },{ "STX", &_::STX, &_::ABS },{ "???", &_::NOP, &_::IMP },
+		{ "BCC", &_::BCC, &_::REL },{ "STA", &_::STA, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "STY", &_::STY, &_::ZPX },{ "STA", &_::STA, &_::ZPX },{ "STX", &_::STX, &_::ZPY },{ "???", &_::NOP, &_::IMP },{ "TYA", &_::TYA, &_::IMP },{ "STA", &_::STA, &_::ABY },{ "TXS", &_::TXS, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "STA", &_::STA, &_::ABX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },
+		{ "LDY", &_::LDY, &_::IMM },{ "LDA", &_::LDA, &_::IZX },{ "LDX", &_::LDX, &_::IMM },{ "???", &_::NOP, &_::IMP },{ "LDY", &_::LDY, &_::ZP0 },{ "LDA", &_::LDA, &_::ZP0 },{ "LDX", &_::LDX, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "TAY", &_::TAY, &_::IMP },{ "LDA", &_::LDA, &_::IMM },{ "TAX", &_::TAX, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "LDY", &_::LDY, &_::ABS },{ "LDA", &_::LDA, &_::ABS },{ "LDX", &_::LDX, &_::ABS },{ "???", &_::NOP, &_::IMP },
+		{ "BCS", &_::BCS, &_::REL },{ "LDA", &_::LDA, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "LDY", &_::LDY, &_::ZPX },{ "LDA", &_::LDA, &_::ZPX },{ "LDX", &_::LDX, &_::ZPY },{ "???", &_::NOP, &_::IMP },{ "CLV", &_::CLV, &_::IMP },{ "LDA", &_::LDA, &_::ABY },{ "TSX", &_::TSX, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "LDY", &_::LDY, &_::ABX },{ "LDA", &_::LDA, &_::ABX },{ "LDX", &_::LDX, &_::ABY },{ "???", &_::NOP, &_::IMP },
+		{ "CPY", &_::CPY, &_::IMM },{ "CMP", &_::CMP, &_::IZX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "CPY", &_::CPY, &_::ZP0 },{ "CMP", &_::CMP, &_::ZP0 },{ "DEC", &_::DEC, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "INY", &_::INY, &_::IMP },{ "CMP", &_::CMP, &_::IMM },{ "DEX", &_::DEX, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "CPY", &_::CPY, &_::ABS },{ "CMP", &_::CMP, &_::ABS },{ "DEC", &_::DEC, &_::ABS },{ "???", &_::NOP, &_::IMP },
+		{ "BNE", &_::BNE, &_::REL },{ "CMP", &_::CMP, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "CMP", &_::CMP, &_::ZPX },{ "DEC", &_::DEC, &_::ZPX },{ "???", &_::NOP, &_::IMP },{ "CLD", &_::CLD, &_::IMP },{ "CMP", &_::CMP, &_::ABY },{ "NOP", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "CMP", &_::CMP, &_::ABX },{ "DEC", &_::DEC, &_::ABX },{ "???", &_::NOP, &_::IMP },
+		{ "CPX", &_::CPX, &_::IMM },{ "SBC", &_::SBC, &_::IZX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "CPX", &_::CPX, &_::ZP0 },{ "SBC", &_::SBC, &_::ZP0 },{ "INC", &_::INC, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "INX", &_::INX, &_::IMP },{ "SBC", &_::SBC, &_::IMM },{ "NOP", &_::NOP, &_::IMP },{ "???", &_::SBC, &_::IMP },{ "CPX", &_::CPX, &_::ABS },{ "SBC", &_::SBC, &_::ABS },{ "INC", &_::INC, &_::ABS },{ "???", &_::NOP, &_::IMP },
+		{ "BEQ", &_::BEQ, &_::REL },{ "SBC", &_::SBC, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "SBC", &_::SBC, &_::ZPX },{ "INC", &_::INC, &_::ZPX },{ "???", &_::NOP, &_::IMP },{ "SED", &_::SED, &_::IMP },{ "SBC", &_::SBC, &_::ABY },{ "NOP", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "SBC", &_::SBC, &_::ABX },{ "INC", &_::INC, &_::ABX },{ "???", &_::NOP, &_::IMP },
+	}};
   // clang-format on
 };
 
