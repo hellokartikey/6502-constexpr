@@ -33,6 +33,8 @@ class cpu6502 {
     memory.at(addr + 1) = static_cast<byte>(data >> 8);
   }
 
+  // ADDRESSING MODES
+
   constexpr void IMP() { operand = A; }
 
   constexpr void IMM() { address = PC++; }
@@ -80,65 +82,8 @@ class cpu6502 {
     auto ptr = fetch() + Y;
     address = (read((ptr + 1) & 0x00ff) << 8) | read(ptr & 0x00ff);
   }
-
-  constexpr void CLC() { C = false; }
-
-  constexpr void CLD() { D = false; }
-
-  constexpr void CLI() { I = false; }
-
-  constexpr void CLV() { V = false; }
-
-  constexpr void CMP() {
-    byte fetched = read(address);
-    word temp = static_cast<word>(A) - static_cast<word>(fetched);
-    C = A >= fetched;
-    Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
-  }
-
-  constexpr void CPX() {
-    byte fetched = read(address);
-    word temp = static_cast<word>(X) - static_cast<word>(fetched);
-    C = X >= fetched;
-    Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
-  }
-
-  constexpr void CPY() {
-    byte fetched = read(address);
-    word temp = static_cast<word>(Y) - static_cast<word>(fetched);
-    C = Y >= fetched;
-    Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
-  }
-
-  constexpr void DEC() {
-    byte fetched = read(address);
-    word temp = fetched - 1;
-    write(address, temp & 0x00FF);
-    Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
-  }
-
-  constexpr void DEX() {
-    X--;
-    Z = X == 0x00;
-    N = X & 0x80;
-  }
-
-  constexpr void DEY() {
-    Y--;
-    Z = Y == 0x00;
-    N = Y & 0x80;
-  }
-
-  constexpr void EOR() {
-    byte fetched = read(address);
-    A = A ^ fetched;
-    Z = A == 0x00;
-    N = A & 0x80;
-  }
+  
+  // INSTRUCTIONS
 
   // Add with Carry
   constexpr void ADC() {
@@ -158,26 +103,6 @@ class cpu6502 {
     A = A & fetched;
     Z = A == 0x00;
     N = A & 0x80;
-  }
-
-  constexpr void INC() {
-    byte fetched = read(address);
-    word temp = fetched + 1;
-    write(address, temp & 0x00FF);
-    Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
-  }
-
-  constexpr void INX() {
-    X++;
-    Z = X == 0x00;
-    N = X & 0x80;
-  }
-
-  constexpr void INY() {
-    Y++;
-    Z = Y == 0x00;
-    N = Y & 0x80;
   }
 
   // Arithmetic Shift Left
@@ -285,6 +210,85 @@ class cpu6502 {
       address = PC + address_rel;
       PC = address;
     }
+  }
+
+  constexpr void CLC() { C = false; }
+
+  constexpr void CLD() { D = false; }
+
+  constexpr void CLI() { I = false; }
+
+  constexpr void CLV() { V = false; }
+
+  constexpr void CMP() {
+    byte fetched = read(address);
+    word temp = static_cast<word>(A) - static_cast<word>(fetched);
+    C = A >= fetched;
+    Z = (temp & 0x00FF) == 0x0000;
+    N = temp & 0x0080;
+  }
+
+  constexpr void CPX() {
+    byte fetched = read(address);
+    word temp = static_cast<word>(X) - static_cast<word>(fetched);
+    C = X >= fetched;
+    Z = (temp & 0x00FF) == 0x0000;
+    N = temp & 0x0080;
+  }
+
+  constexpr void CPY() {
+    byte fetched = read(address);
+    word temp = static_cast<word>(Y) - static_cast<word>(fetched);
+    C = Y >= fetched;
+    Z = (temp & 0x00FF) == 0x0000;
+    N = temp & 0x0080;
+  }
+
+  constexpr void DEC() {
+    byte fetched = read(address);
+    word temp = fetched - 1;
+    write(address, temp & 0x00FF);
+    Z = (temp & 0x00FF) == 0x0000;
+    N = temp & 0x0080;
+  }
+
+  constexpr void DEX() {
+    X--;
+    Z = X == 0x00;
+    N = X & 0x80;
+  }
+
+  constexpr void DEY() {
+    Y--;
+    Z = Y == 0x00;
+    N = Y & 0x80;
+  }
+
+  constexpr void EOR() {
+    byte fetched = read(address);
+    A = A ^ fetched;
+    Z = A == 0x00;
+    N = A & 0x80;
+  }
+
+  constexpr void INC() {
+    byte fetched = read(address);
+    word temp = fetched + 1;
+    write(address, temp & 0x00FF);
+    Z = (temp & 0x00FF) == 0x0000;
+    N = temp & 0x0080;
+  }
+
+  constexpr void INX() {
+    X++;
+    Z = X == 0x00;
+    N = X & 0x80;
+  }
+
+  constexpr void INY() {
+    Y++;
+    Z = Y == 0x00;
+    N = Y & 0x80;
   }
 
  private:
