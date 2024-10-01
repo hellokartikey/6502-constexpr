@@ -82,7 +82,7 @@ class cpu6502 {
     auto ptr = fetch() + Y;
     address = (read((ptr + 1) & 0x00ff) << 8) | read(ptr & 0x00ff);
   }
-  
+
   // INSTRUCTIONS
 
   // Add with Carry
@@ -306,14 +306,14 @@ class cpu6502 {
   union {
     byte F = 0x00;
     struct {
-      byte N : 1;
-      byte V : 1;
-      byte U : 1;
-      byte B : 1;
-      byte D : 1;
-      byte I : 1;
-      byte Z : 1;
-      byte C : 1;
+      bool N : 1;
+      bool V : 1;
+      bool U : 1;
+      bool B : 1;
+      bool D : 1;
+      bool I : 1;
+      bool Z : 1;
+      bool C : 1;
     };
   };
 
