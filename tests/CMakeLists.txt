@@ -16,6 +16,7 @@ target_sources(
   test_6502
 PRIVATE
   memory.cpp
+  cpu.cpp
 )
 
 include(GoogleTest)

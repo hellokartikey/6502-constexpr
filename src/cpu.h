@@ -3,34 +3,45 @@
 
 #include <array>
 #include <functional>
+#include <string_view>
 
 #include "bit.h"
+#include "core.h"
 
 class cpu6502 {
  public:
   constexpr cpu6502(){};
   auto reset() -> void;
 
-  auto exec() -> void {
-    auto code = fetch();
+  constexpr auto exec() -> void {
+    auto opcode = fetch();
 
     U = true;
 
-    (*lookup[code].addrmode)();
-    (*lookup[code].operate)();
+    (this->*lookup[opcode].addrmode)();
+    (this->*lookup[opcode].operate)();
 
     U = true;
   }
 
-  auto exec_n(int value = 1) -> void {
-    while (value-- > 0) { exec(); }
+  constexpr auto exec_n(int value = 1) -> void {
+    while (value-- > 0) {
+      exec();
+    }
   }
 
   auto exec_all() -> void {
-    while (true) { exec(); }
+    while (true) {
+      exec();
+    }
   }
 
-  auto load_program(instructions program) -> void;
+  constexpr auto load_program(instructions program) -> void {
+    word addr = 0;
+    for (auto &byte : program) {
+      write(addr++, byte);
+    }
+  }
 
   constexpr auto fetch() -> byte { return opcode = read(PC++); }
 
@@ -204,7 +215,7 @@ class cpu6502 {
     SP--;
 
     B = 1;
-    write(0x0100 + SP, F);
+    write(0x0100 + SP, getFlag());
     SP--;
     B = 0;
 
@@ -366,7 +377,7 @@ class cpu6502 {
     B = 1;
     U = 1;
 
-    write(0x0100 + SP, F);
+    write(0x0100 + SP, getFlag());
     SP--;
 
     B = 0;
@@ -382,7 +393,7 @@ class cpu6502 {
 
   constexpr void PLP() {
     SP++;
-    F = read(0x0100 + SP);
+    setFlag(read(0x0100 + SP));
     U == 1;
   }
 
@@ -414,7 +425,7 @@ class cpu6502 {
 
   constexpr void RTI() {
     SP++;
-    F = read(0x0100 + SP);
+    setFlag(read(0x0100 + SP));
     B = 0;
     U = 0;
 
@@ -500,7 +511,26 @@ class cpu6502 {
     N = A & 0x80;
   }
 
- private:
+  // Flag stuff
+  // https://www.nesdev.org/wiki/Status_flags
+  constexpr byte getFlag() {
+    return (N << 7) | (V << 6) | (U << 5) | (B << 4) | (D << 3) | (I << 2) |
+           (Z << 1) | (C << 0);
+  }
+
+  constexpr void setFlag(byte f) {
+    N = f & 0b10000000;
+    V = f & 0b01000000;
+    U = f & 0b00100000;
+    B = f & 0b10010000;
+    D = f & 0b10001000;
+    I = f & 0b10000100;
+    Z = f & 0b10000010;
+    C = f & 0b10000001;
+    (N << 7) | (V << 6) | (U << 5) | (B << 4) | (D << 3) | (I << 2) | (Z << 1) |
+        (C << 0);
+  }
+
   byte operand = 0x00;
   byte opcode = 0x00;
   word address = 0x0000;
@@ -513,19 +543,14 @@ class cpu6502 {
   word PC = 0x0000;
   byte SP = 0x00;
 
-  union {
-    byte F = 0x00;
-    struct {
-      bool N : 1;
-      bool V : 1;
-      bool U : 1;
-      bool B : 1;
-      bool D : 1;
-      bool I : 1;
-      bool Z : 1;
-      bool C : 1;
-    };
-  };
+  bool N = 0;
+  bool V = 0;
+  bool U = 0;
+  bool B = 0;
+  bool D = 0;
+  bool I = 0;
+  bool Z = 0;
+  bool C = 0;
 
   std::array<byte, 0x10000> memory{};
 
