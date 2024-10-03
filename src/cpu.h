@@ -347,7 +347,11 @@ class cpu6502 {
   }
 
   constexpr void LSR() {
-    byte fetched = read(address);
+    byte fetched = A;
+    if (lookup.at(opcode).addrmode != &cpu6502::IMP) {
+      fetched = read(address);
+    }
+
     C = (operand & 0x1) != 0;
     byte temp = fetched >> 1;
     Z = temp == 0x00;
@@ -363,7 +367,7 @@ class cpu6502 {
   constexpr void NOP() {}
 
   constexpr void ORA() {
-    A = A | operand;
+    A = A | read(address);
     Z = A == 0x00;
     N = (A & 0x80) != 0;
   }
