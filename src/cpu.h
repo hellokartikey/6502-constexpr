@@ -330,19 +330,19 @@ class cpu6502 {
   }
 
   constexpr void LDA() {
-    A = operand;
+    A = read(address);
     Z = A == 0x00;
     N = (A & 0x80) != 0;
   }
 
   constexpr void LDX() {
-    X = operand;
+    X = read(address);
     Z = X == 0x00;
     N = (X & 0x80) != 0;
   }
 
   constexpr void LDY() {
-    Y = operand;
+    Y = read(address);
     Z = Y == 0x00;
     N = (Y & 0x80) != 0;
   }
