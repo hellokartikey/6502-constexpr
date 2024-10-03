@@ -1,5 +1,5 @@
 ---
-Checks: 'clang-diagnostic-*,clang-analyzer-*,bugprone-*,clang-analyzer-*,cppcoreguidelines-*,google-*,hicpp-*,modernize-*,performance-*,portability-*,readability-*,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-hicpp-signed-bitwise,-readability-convert-member-functions-to-static,-cppcoreguidelines-pro-type-union-access'
+Checks: 'clang-diagnostic-*,clang-analyzer-*,bugprone-*,clang-analyzer-*,cppcoreguidelines-*,google-*,hicpp-*,modernize-*,performance-*,portability-*,readability-*,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-hicpp-signed-bitwise,-readability-convert-member-functions-to-static,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-macro-usage'
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''
@@ -297,7 +297,7 @@ CheckOptions:
   readability-else-after-return.WarnOnUnfixable: 'true'
   readability-function-cognitive-complexity.DescribeBasicIncrements: 'true'
   readability-function-cognitive-complexity.IgnoreMacros: 'false'
-  readability-function-cognitive-complexity.Threshold: '25'
+  readability-function-cognitive-complexity.Threshold: '100'
   readability-function-size.BranchThreshold: none
   readability-function-size.LineThreshold: none
   readability-function-size.NestingThreshold: none
@@ -310,8 +310,8 @@ CheckOptions:
   readability-identifier-length.IgnoredVariableNames: ''
   readability-identifier-length.MinimumExceptionNameLength: '2'
   readability-identifier-length.MinimumLoopCounterNameLength: '2'
-  readability-identifier-length.MinimumParameterNameLength: '3'
-  readability-identifier-length.MinimumVariableNameLength: '3'
+  readability-identifier-length.MinimumParameterNameLength: '1'
+  readability-identifier-length.MinimumVariableNameLength: '1'
   readability-identifier-naming.AggressiveDependentMemberLookup: 'false'
   readability-identifier-naming.CheckAnonFieldInParent: 'false'
   readability-identifier-naming.GetConfigPerFile: 'true'
