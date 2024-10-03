@@ -1604,3 +1604,62 @@ TEST(LDY, Absolute) {
   HK_TEST(cpu.Z == false);
   HK_TEST(cpu.N == false);
 }
+
+TEST(LSR, Accumulator) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0xa9, 0x02, 0x4a});
+    cpu.exec_n(2);
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0x01);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.N == false);
+}
+
+TEST(ORA, Immediate) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0xa9, 0x01, 0x09, 0xfe});
+    cpu.exec_n(2);
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0xff);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.N == true);
+}
+
+TEST(PHA, Implied) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0xa9, 0x64, 0x48});
+    cpu.exec_n(2);
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == cpu.read(cpu.SP + 1));
+}
+
+TEST(PHP, Implied) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0x08});
+    cpu.exec_n(1);
+
+    cpu.B = true;
+    cpu.U = true;
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.getFlag() == cpu.read(cpu.SP + 1));
+}
