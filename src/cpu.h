@@ -5,7 +5,6 @@
 #include <functional>
 #include <string_view>
 
-#include "bit.h"
 #include "core.h"
 
 class cpu6502 {
@@ -106,8 +105,8 @@ class cpu6502 {
   }
 
   constexpr void IZY() {
-    auto ptr = fetch() + Y;
-    address = (read((ptr + 1) & 0x00ff) << 8) | read(ptr & 0x00ff);
+    auto ptr = fetch();
+    address = ((read((ptr + 1) & 0x00ff) << 8) | read(ptr & 0x00ff)) + Y;
   }
 
   // INSTRUCTIONS
