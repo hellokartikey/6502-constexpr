@@ -1663,3 +1663,32 @@ TEST(PHP, Implied) {
 
   HK_TEST(cpu.getFlag() == cpu.read(cpu.SP + 1));
 }
+
+TEST(PLA, Implied) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0xa9, 0x64, 0x48, 0xa9, 0x00, 0x68});
+    cpu.exec_n(4);
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0x64);
+}
+
+TEST(PLP, Implied) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0x08, 0x28});
+    cpu.exec_n(2);
+
+    cpu.B = true;
+    cpu.U = true;
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.getFlag() == cpu.getFlag());
+}
