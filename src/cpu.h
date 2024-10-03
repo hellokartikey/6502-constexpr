@@ -9,7 +9,7 @@
 
 class cpu6502 {
  public:
-  constexpr cpu6502(){};
+  constexpr cpu6502() = default;
   auto reset() -> void;
 
   constexpr auto exec() -> void {
@@ -17,8 +17,8 @@ class cpu6502 {
 
     U = true;
 
-    (this->*lookup[opcode].addrmode)();
-    (this->*lookup[opcode].operate)();
+    (this->*lookup.at(opcode).addrmode)();
+    (this->*lookup.at(opcode).operate)();
 
     U = true;
   }
@@ -37,7 +37,7 @@ class cpu6502 {
 
   constexpr auto load_program(instructions program) -> void {
     word addr = 0;
-    for (auto &byte : program) {
+    for (const auto &byte : program) {
       write(addr++, byte);
     }
   }
@@ -114,13 +114,13 @@ class cpu6502 {
   // Add with Carry
   constexpr void ADC() {
     byte fetched = read(address);
-    word temp = (word)A + (word)fetched + (word)C;
+    word temp = A + fetched + static_cast<int>(C);
 
     C = temp > 255;
     Z = (temp & 0x00FF) == 0;
-    V = (~((word)A ^ (word)fetched) & ((word)A ^ (word)temp)) & 0x0080;
-    N = temp & 0x80;
-    A = temp & 0x00FF;
+    V = ((~(A ^ fetched) & (A ^ temp)) & 0x0080) != 0;
+    N = (temp & 0x80) != 0;
+    A = (temp & 0x00FF);
   }
 
   // Logical AND
@@ -128,22 +128,23 @@ class cpu6502 {
     byte fetched = read(address);
     A = A & fetched;
     Z = A == 0x00;
-    N = A & 0x80;
+    N = (A & 0x80) != 0;
   }
 
   // Arithmetic Shift Left
   constexpr void ASL() {
     byte fetched = read(address);
-    word temp = (word)fetched << 1;
+    word temp = static_cast<word>(fetched) << 1;
 
     C = (temp & 0xFF00) > 0;
     Z = (temp & 0x00FF) == 0x00;
-    N = temp & 0x80;
+    N = (temp & 0x80) != 0;
 
-    if (lookup[opcode].addrmode == &cpu6502::IMP)
+    if (lookup.at(opcode).addrmode == &cpu6502::IMP) {
       A = temp & 0x00FF;
-    else
+    } else {
       write(address, temp & 0x00FF);
+    }
   }
 
   // Branch if Carry Clear
@@ -175,8 +176,8 @@ class cpu6502 {
     byte fetched = read(address);
     word temp = A & fetched;
     Z = (temp & 0x00FF) == 0x00;
-    N = fetched & (1 << 7);
-    V = fetched & (1 << 6);
+    N = (fetched & (1 << 7)) != 0;
+    V = (fetched & (1 << 6)) != 0;
   }
 
   // Branch if Minus
@@ -207,18 +208,18 @@ class cpu6502 {
   constexpr void BRK() {
     PC++;
 
-    I = 1;
+    I = true;
     write(0x0100 + SP, (PC >> 8) & 0x00FF);
     SP--;
     write(0x0100 + SP, PC & 0x00FF);
     SP--;
 
-    B = 1;
+    B = true;
     write(0x0100 + SP, getFlag());
     SP--;
-    B = 0;
+    B = false;
 
-    PC = (word)read(0xFFFE) | ((word)read(0xFFFF) << 8);
+    PC = read16(0xfffe);
   }
 
   // Branch if Overflow Clear
@@ -250,7 +251,7 @@ class cpu6502 {
     word temp = static_cast<word>(A) - static_cast<word>(fetched);
     C = A >= fetched;
     Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
+    N = (temp & 0x0080) != 0;
   }
 
   constexpr void CPX() {
@@ -258,7 +259,7 @@ class cpu6502 {
     word temp = static_cast<word>(X) - static_cast<word>(fetched);
     C = X >= fetched;
     Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
+    N = (temp & 0x0080) != 0;
   }
 
   constexpr void CPY() {
@@ -266,7 +267,7 @@ class cpu6502 {
     word temp = static_cast<word>(Y) - static_cast<word>(fetched);
     C = Y >= fetched;
     Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
+    N = (temp & 0x0080) != 0;
   }
 
   constexpr void DEC() {
@@ -274,26 +275,26 @@ class cpu6502 {
     word temp = fetched - 1;
     write(address, temp & 0x00FF);
     Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
+    N = (temp & 0x0080) != 0;
   }
 
   constexpr void DEX() {
     X--;
     Z = X == 0x00;
-    N = X & 0x80;
+    N = (X & 0x80) != 0;
   }
 
   constexpr void DEY() {
     Y--;
     Z = Y == 0x00;
-    N = Y & 0x80;
+    N = (Y & 0x80) != 0;
   }
 
   constexpr void EOR() {
     byte fetched = read(address);
     A = A ^ fetched;
     Z = A == 0x00;
-    N = A & 0x80;
+    N = (A & 0x80) != 0;
   }
 
   constexpr void INC() {
@@ -301,19 +302,19 @@ class cpu6502 {
     word temp = fetched + 1;
     write(address, temp & 0x00FF);
     Z = (temp & 0x00FF) == 0x0000;
-    N = temp & 0x0080;
+    N = (temp & 0x0080) != 0;
   }
 
   constexpr void INX() {
     X++;
     Z = X == 0x00;
-    N = X & 0x80;
+    N = (X & 0x80) != 0;
   }
 
   constexpr void INY() {
     Y++;
     Z = Y == 0x00;
-    N = Y & 0x80;
+    N = (Y & 0x80) != 0;
   }
 
   // Opcodes
@@ -330,41 +331,41 @@ class cpu6502 {
   constexpr void LDA() {
     A = operand;
     Z = A == 0x00;
-    N = A & 0x80;
+    N = (A & 0x80) != 0;
   }
 
   constexpr void LDX() {
     X = operand;
     Z = X == 0x00;
-    N = X & 0x80;
+    N = (X & 0x80) != 0;
   }
 
   constexpr void LDY() {
     Y = operand;
     Z = Y == 0x00;
-    N = Y & 0x80;
+    N = (Y & 0x80) != 0;
   }
 
   constexpr void LSR() {
     byte fetched = read(address);
-    C = operand & 0x1;
+    C = (operand & 0x1) != 0;
     byte temp = fetched >> 1;
     Z = temp == 0x00;
-    N = temp & 0x80;
+    N = (temp & 0x80) != 0;
 
-    if (lookup[opcode].addrmode == &cpu6502::IMP) {
+    if (lookup.at(opcode).addrmode == &cpu6502::IMP) {
       A = temp;
     } else {
       write(address, temp);
     }
   }
 
-  constexpr void NOP() { return; }
+  constexpr void NOP() {}
 
   constexpr void ORA() {
     A = A | operand;
     Z = A == 0x00;
-    N = A & 0x80;
+    N = (A & 0x80) != 0;
   }
 
   constexpr void PHA() {
@@ -373,36 +374,36 @@ class cpu6502 {
   }
 
   constexpr void PHP() {
-    B = 1;
-    U = 1;
+    B = true;
+    U = true;
 
     write(0x0100 + SP, getFlag());
     SP--;
 
-    B = 0;
-    U = 0;
+    B = false;
+    U = false;
   }
 
   constexpr void PLA() {
     SP++;
     A = read(0x100 + SP);
     Z = A == 0x00;
-    N = A & 0x80;
+    N = (A & 0x80) != 0;
   }
 
   constexpr void PLP() {
     SP++;
     setFlag(read(0x0100 + SP));
-    U == 1;
+    U = true;
   }
 
   constexpr void ROL() {
-    byte temp = (operand << 1) | C;
-    C = temp & 0xff00;
+    byte temp = (operand << 1) | static_cast<int>(C);
+    C = (temp & 0xff00) != 0;
     Z = (temp & 0xff) == 0x00;
-    N = temp & 0x80;
+    N = (temp & 0x80) != 0;
 
-    if (lookup[opcode].addrmode == &cpu6502::IMP) {
+    if (lookup.at(opcode).addrmode == &cpu6502::IMP) {
       A = temp & 0xff;
     } else {
       write(address, temp & 0xff);
@@ -410,12 +411,12 @@ class cpu6502 {
   }
 
   constexpr void ROR() {
-    word temp = (C << 7) | (operand >> 1);
-    C = operand & 0x01;
+    word temp = (static_cast<int>(C) << 7) | (operand >> 1);
+    C = (operand & 0x01) != 0;
     Z = (temp & 0xff) == 0x00;
-    N = temp & 0x80;
+    N = (temp & 0x80) != 0;
 
-    if (lookup[opcode].addrmode == &cpu6502::IMP) {
+    if (lookup.at(opcode).addrmode == &cpu6502::IMP) {
       A = temp & 0xff;
     } else {
       write(address, temp & 0xff);
@@ -425,8 +426,8 @@ class cpu6502 {
   constexpr void RTI() {
     SP++;
     setFlag(read(0x0100 + SP));
-    B = 0;
-    U = 0;
+    B = false;
+    U = false;
 
     SP++;
     PC = read16(0x0100 + SP);
@@ -444,14 +445,14 @@ class cpu6502 {
     // Operating in 16-bit domain to capture carry out
     // We can invert the bottom 8 bits with bitwise xor
     byte fetched = read(address);
-    word value = ((word)fetched) ^ 0x00FF;
-    word temp = (word)A + value + (word)C;
+    word value = (fetched) ^ 0x00FF;
+    word temp = A + value + static_cast<int>(C);
 
-    C = temp & 0xFF00;
+    C = (temp & 0xFF00) != 0;
     Z = ((temp & 0x00FF) == 0);
-    V = (temp ^ (word)A) & (temp ^ value) & 0x0080;
-    N = temp & 0x0080;
-    A = temp & 0x00FF;
+    V = ((temp ^ A) & (temp ^ value) & 0x0080) != 0;
+    N = (temp & 0x0080) != 0;
+    A = (temp & 0x00FF);
   }
 
   // Set Carry Flag
@@ -476,28 +477,28 @@ class cpu6502 {
   constexpr void TAX() {
     X = A;
     Z = X == 0x00;
-    N = X & 0x80;
+    N = (X & 0x80) != 0;
   }
 
   // Transfer Accumulator to Y
   constexpr void TAY() {
     Y = A;
     Z = Y == 0x00;
-    N = Y & 0x80;
+    N = (Y & 0x80) != 0;
   }
 
   // Transfer Stack Pointer to X
   constexpr void TSX() {
     X = SP;
     Z = X == 0x00;
-    N = X & 0x80;
+    N = (X & 0x80) != 0;
   }
 
   // Transfer X to Accumulator
   constexpr void TXA() {
     A = X;
     Z = A == 0x00;
-    N = A & 0x80;
+    N = (A & 0x80) != 0;
   }
 
   // Transfer X to Stack Pointer
@@ -507,27 +508,34 @@ class cpu6502 {
   constexpr void TYA() {
     A = Y;
     Z = A == 0x00;
-    N = A & 0x80;
+    N = (A & 0x80) != 0;
   }
 
   // Flag stuff
   // https://www.nesdev.org/wiki/Status_flags
-  constexpr byte getFlag() {
-    return (N << 7) | (V << 6) | (U << 5) | (B << 4) | (D << 3) | (I << 2) |
-           (Z << 1) | (C << 0);
+  [[nodiscard]] constexpr auto getFlag() const -> byte {
+    auto n = static_cast<byte>(N);
+    auto v = static_cast<byte>(V);
+    auto u = static_cast<byte>(U);
+    auto b = static_cast<byte>(B);
+    auto d = static_cast<byte>(D);
+    auto i = static_cast<byte>(I);
+    auto z = static_cast<byte>(Z);
+    auto c = static_cast<byte>(C);
+
+    return (n << 7) | (v << 6) | (u << 5) | (b << 4) | (d << 3) | (i << 2) |
+           (z << 1) | (c << 0);
   }
 
   constexpr void setFlag(byte f) {
-    N = f & 0b10000000;
-    V = f & 0b01000000;
-    U = f & 0b00100000;
-    B = f & 0b10010000;
-    D = f & 0b10001000;
-    I = f & 0b10000100;
-    Z = f & 0b10000010;
-    C = f & 0b10000001;
-    (N << 7) | (V << 6) | (U << 5) | (B << 4) | (D << 3) | (I << 2) | (Z << 1) |
-        (C << 0);
+    N = (f & 0b10000000) != 0;
+    V = (f & 0b01000000) != 0;
+    U = (f & 0b00100000) != 0;
+    B = (f & 0b10010000) != 0;
+    D = (f & 0b10001000) != 0;
+    I = (f & 0b10000100) != 0;
+    Z = (f & 0b10000010) != 0;
+    C = (f & 0b10000001) != 0;
   }
 
   byte operand = 0x00;
@@ -542,21 +550,21 @@ class cpu6502 {
   word PC = 0x0000;
   byte SP = 0x00;
 
-  bool N = 0;
-  bool V = 0;
-  bool U = 0;
-  bool B = 0;
-  bool D = 0;
-  bool I = 0;
-  bool Z = 0;
-  bool C = 0;
+  bool N = false;
+  bool V = false;
+  bool U = false;
+  bool B = false;
+  bool D = false;
+  bool I = false;
+  bool Z = false;
+  bool C = false;
 
   std::array<byte, 0x10000> memory{};
 
   struct INSTRUCTION {
     std::string_view name;
-    void (cpu6502::*operate)(void) = nullptr;
-    void (cpu6502::*addrmode)(void) = nullptr;
+    void (cpu6502::*operate)() = nullptr;
+    void (cpu6502::*addrmode)() = nullptr;
   };
 
   using _ = cpu6502;
