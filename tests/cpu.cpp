@@ -176,3 +176,74 @@ TEST(ADC, IndirectY) {
   HK_TEST(cpu.V == false);
   HK_TEST(cpu.N == false);
 }
+
+TEST(JMP, Absolute) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0x4c, 0x69, 0x60});
+    cpu.exec();
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.PC == 0x6069);
+}
+
+TEST(JSR, Absolute) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0x20, 0x03, 0x10});
+    cpu.exec_n(1);
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.PC == 0x1003);
+}
+
+TEST(LDA, Absolute) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0xa9, 0x69});
+    cpu.exec_n(1);
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0x69);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.N == false);
+}
+
+TEST(LDX, Absolute) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0xa2, 0x69});
+    cpu.exec_n(1);
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.X == 0x69);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.N == false);
+}
+
+TEST(LDY, Absolute) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0xa0, 0x69});
+    cpu.exec_n(1);
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.Y == 0x69);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.N == false);
+}
