@@ -17,7 +17,11 @@ else:
         bs = f.read()
         a = '{' + ', '.join(f'0x{b:02x}' for b in bs) + '}'
         print(a)
-        code = os.system(f'echo {a} | xclip -sel c')
+        code = 0
+        if (os.system('which xclip')): # if xclip not present
+            code = os.system(f'echo {a} | wl-copy')
+        else:
+            code = os.system(f'echo {a} | xclip -sel c')
         if code == 0:
             print('Output copied to clipboard')
         else:
