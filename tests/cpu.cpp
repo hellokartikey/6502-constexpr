@@ -974,3 +974,308 @@ TEST(INY, Negative) {
   HK_TEST(cpu.V == false);
   HK_TEST(cpu.N == true);
 }
+
+// Subtract with Carry
+TEST(SBC, Borrowed) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SBC #$30
+    cpu.load_program({0xe9, 0x30});
+    cpu.A = 0x50;
+    cpu.C = false;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0x1f);
+  HK_TEST(cpu.C == true);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Subtract with Carry
+TEST(SBC, Positive) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SBC #$30
+    cpu.load_program({0xe9, 0x30});
+    cpu.A = 0x50;
+    cpu.C = true;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0x20);
+  HK_TEST(cpu.C == true);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Subtract with Carry
+TEST(SBC, Negative) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SBC #$50
+    cpu.load_program({0xe9, 0x50});
+    cpu.A = 0x30;
+    cpu.C = true;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0xe0);
+  HK_TEST(cpu.C == false);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == true);
+}
+
+// Subtract with Carry
+TEST(SBC, Zero) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SBC #$30
+    cpu.load_program({0xe9, 0x30});
+    cpu.A = 0x30;
+    cpu.C = true;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0x00);
+  HK_TEST(cpu.C == true);
+  HK_TEST(cpu.Z == true);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Subtract with Carry
+TEST(SBC, Overflow) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SBC #$01
+    cpu.load_program({0xe9, 0x01});
+    cpu.A = 0x80;
+    cpu.C = true;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0x7f);
+  HK_TEST(cpu.C == true);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == true);
+  HK_TEST(cpu.N == false);
+}
+
+// Set Carry Flag
+TEST(SEC, Implied_Set) {
+  // Testing when C=1
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SEC
+    cpu.load_program({0x38});
+    cpu.C = true;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.C == true);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Set Carry Flag
+TEST(SEC, Implied_Unset) {
+  // Testing when C=0
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SEC
+    cpu.load_program({0x38});
+    cpu.C = false;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.C == true);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Set Decimal Flag
+TEST(SED, Implied_Set) {
+  // Testing when D=1
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SED
+    cpu.load_program({0xf8});
+    cpu.D = true;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.C == false);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == true);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Set Decimal Flag
+TEST(SED, Implied_Unset) {
+  // Testing when D=0
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SED
+    cpu.load_program({0xf8});
+    cpu.D = false;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.C == false);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == true);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Set Interrupt Disable
+TEST(SEI, Implied_Set) {
+  // Testing when I=1
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SEI
+    cpu.load_program({0x78});
+    cpu.I = true;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.C == false);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == true);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Set Interrupt Disable
+TEST(SEI, Implied_Unset) {
+  // Testing when I=0
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // SEI
+    cpu.load_program({0x78});
+    cpu.I = false;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.C == false);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == true);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Store Accumulator
+TEST(STA, Absolute) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // STA $abcd
+    cpu.load_program({0x8d, 0xcd, 0xab});
+    cpu.A = 0x10;
+    cpu.write(0xabcd, 0x00);
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0x10);
+  HK_TEST(cpu.read(0xabcd) == 0x10);
+  HK_TEST(cpu.C == false);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Store X Register
+TEST(STX, Absolute) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // STX $abcd
+    cpu.load_program({0x8e, 0xcd, 0xab});
+    cpu.X = 0x10;
+    cpu.write(0xabcd, 0x00);
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.X == 0x10);
+  HK_TEST(cpu.read(0xabcd) == 0x10);
+  HK_TEST(cpu.C == false);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
+
+// Store Y Register
+TEST(STY, Absolute) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // STY $abcd
+    cpu.load_program({0x8c, 0xcd, 0xab});
+    cpu.Y = 0x10;
+    cpu.write(0xabcd, 0x00);
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.Y == 0x10);
+  HK_TEST(cpu.read(0xabcd) == 0x10);
+  HK_TEST(cpu.C == false);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}
