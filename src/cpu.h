@@ -133,7 +133,12 @@ class cpu6502 {
 
   // Arithmetic Shift Left
   constexpr void ASL() {
-    byte fetched = read(address);
+    byte fetched = 0;
+    if (lookup[opcode].addrmode == &cpu6502::IMP) {
+      fetched = A;
+    } else {
+      fetched = read(address);
+    }
     word temp = (word)fetched << 1;
 
     C = (temp & 0xFF00) > 0;
