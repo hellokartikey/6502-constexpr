@@ -37,9 +37,10 @@ class cpu6502 {
 
   constexpr auto exec_until_hlt() -> void {
     // Execute until HLT is hit (0x20 opcode)
-    while (read(PC) != 0x20) {
+    while (lookup[read(PC)].name != "HLT") {
       exec();
     }
+    PC++;
   }
 
   constexpr auto load_program(instructions program) -> void {
@@ -355,12 +356,10 @@ class cpu6502 {
   }
 
   constexpr void LSR() {
-    byte fetched = A;
-    if (lookup.at(opcode).addrmode != &cpu6502::IMP) {
-      fetched = read(address);
-    }
+    byte fetched = 
+      (lookup[opcode].addrmode == &cpu6502::IMP ? A : read(address));
 
-    C = (operand & 0x1) != 0;
+    C = (fetched & 0x1) != 0;
     byte temp = fetched >> 1;
     Z = temp == 0x00;
     N = (temp & 0x80) != 0;
@@ -410,7 +409,9 @@ class cpu6502 {
   }
 
   constexpr void ROL() {
-    byte temp = (operand << 1) | static_cast<int>(C);
+    byte fetched = 
+      (lookup[opcode].addrmode == &cpu6502::IMP ? A : read(address));
+    word temp = (fetched << 1) | static_cast<word>(C);
     C = (temp & 0xff00) != 0;
     Z = (temp & 0xff) == 0x00;
     N = (temp & 0x80) != 0;
@@ -423,8 +424,10 @@ class cpu6502 {
   }
 
   constexpr void ROR() {
-    word temp = (static_cast<int>(C) << 7) | (operand >> 1);
-    C = (operand & 0x01) != 0;
+    byte fetched = 
+      (lookup[opcode].addrmode == &cpu6502::IMP ? A : read(address));
+    word temp = (static_cast<int>(C) << 7) | (fetched >> 1);
+    C = (fetched & 0x01) != 0;
     Z = (temp & 0xff) == 0x00;
     N = (temp & 0x80) != 0;
 

@@ -1693,20 +1693,65 @@ TEST(PLP, Implied) {
   HK_TEST(cpu.getFlag() == cpu.getFlag());
 }
 
+TEST(ROL, Accumulator) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // ROL
+    cpu.load_program({0x2a});
+    cpu.C = true;
+    cpu.A = 0xf9;
+    cpu.exec_n(1);
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0xf3);
+  HK_TEST(cpu.C == true);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == true);
+}
+
+TEST(ROL, Absolute) {
+  constexpr auto cpu = [] {
+    cpu6502 cpu;
+
+    cpu.load_program({0x2e, 0x34, 0x12});
+    cpu.write(0x1234, 0xf9);
+    cpu.C = true;
+    cpu.exec_n(1);
+
+    return cpu;
+  }();
+
+  HK_TEST(cpu.read(0x1234) == 0xf3);
+  HK_TEST(cpu.A == 0x00);
+  HK_TEST(cpu.C == true);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == true);
+}
+
 TEST(HLT, Implied) {
   constexpr cpu6502 cpu = [] {
     cpu6502 cpu;
     // ADC #$01
     // ADC #$01
     // ADC #$01
-    // .byt $20 ; HLT
+    // .byt $02 ; HLT
 
-    cpu.load_program({0x69, 0x01, 0x69, 0x01, 0x69, 0x01, 0x20});
+    cpu.load_program({0x69, 0x01, 0x69, 0x01, 0x69, 0x01, 0x02});
     cpu.A = 0x10;
     cpu.exec_until_hlt();
     return cpu;
   }();
 
+  EXPECT_EQ(cpu.A, 0x13);
   HK_TEST(cpu.A == 0x13);
   HK_TEST(cpu.C == false);
   HK_TEST(cpu.Z == false);

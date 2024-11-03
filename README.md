@@ -2,7 +2,7 @@
 
 ## Extended Instruction Set
 
-### HLT (0x20) - 1 byte
+### HLT (0x02) - 1 byte
 
 When using `exec_until_hlt()`, it halts the machine. Otherwise does nothing.
 
@@ -11,7 +11,7 @@ When using `exec_until_hlt()`, it halts the machine. Otherwise does nothing.
 ```asm
 ADC #$01
 ...
-.byt $20 ; HLT
+.byt $02 ; HLT
 ```
 
 ## Using `scripts/asm2arr.py`
