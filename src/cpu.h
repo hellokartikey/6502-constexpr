@@ -35,6 +35,13 @@ class cpu6502 {
     }
   }
 
+  constexpr auto exec_until_hlt() -> void {
+    // Execute until HLT is hit (0x20 opcode)
+    while (read(PC) != 0x20) {
+      exec();
+    }
+  }
+
   constexpr auto load_program(instructions program) -> void {
     word addr = 0;
     for (const auto &byte : program) {
@@ -516,6 +523,10 @@ class cpu6502 {
     N = (A & 0x80) != 0;
   }
 
+  // Extended Instruction Set
+
+  constexpr void HLT() {}
+
   // Flag stuff
   // https://www.nesdev.org/wiki/Status_flags
   [[nodiscard]] constexpr auto getFlag() const -> byte {
@@ -576,7 +587,7 @@ class cpu6502 {
 
   // clang-format off
   std::array<INSTRUCTION, 0x100> lookup = {{
-		{ "BRK", &_::BRK, &_::IMM },{ "ORA", &_::ORA, &_::IZX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ZP0 },{ "ASL", &_::ASL, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "PHP", &_::PHP, &_::IMP },{ "ORA", &_::ORA, &_::IMM },{ "ASL", &_::ASL, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ABS },{ "ASL", &_::ASL, &_::ABS },{ "???", &_::NOP, &_::IMP },
+		{ "BRK", &_::BRK, &_::IMM },{ "ORA", &_::ORA, &_::IZX },{ "HLT", &_::HLT, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ZP0 },{ "ASL", &_::ASL, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "PHP", &_::PHP, &_::IMP },{ "ORA", &_::ORA, &_::IMM },{ "ASL", &_::ASL, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ABS },{ "ASL", &_::ASL, &_::ABS },{ "???", &_::NOP, &_::IMP },
 		{ "BPL", &_::BPL, &_::REL },{ "ORA", &_::ORA, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ZPX },{ "ASL", &_::ASL, &_::ZPX },{ "???", &_::NOP, &_::IMP },{ "CLC", &_::CLC, &_::IMP },{ "ORA", &_::ORA, &_::ABY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "ORA", &_::ORA, &_::ABX },{ "ASL", &_::ASL, &_::ABX },{ "???", &_::NOP, &_::IMP },
 		{ "JSR", &_::JSR, &_::ABS },{ "AND", &_::AND, &_::IZX },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "BIT", &_::BIT, &_::ZP0 },{ "AND", &_::AND, &_::ZP0 },{ "ROL", &_::ROL, &_::ZP0 },{ "???", &_::NOP, &_::IMP },{ "PLP", &_::PLP, &_::IMP },{ "AND", &_::AND, &_::IMM },{ "ROL", &_::ROL, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "BIT", &_::BIT, &_::ABS },{ "AND", &_::AND, &_::ABS },{ "ROL", &_::ROL, &_::ABS },{ "???", &_::NOP, &_::IMP },
 		{ "BMI", &_::BMI, &_::REL },{ "AND", &_::AND, &_::IZY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "AND", &_::AND, &_::ZPX },{ "ROL", &_::ROL, &_::ZPX },{ "???", &_::NOP, &_::IMP },{ "SEC", &_::SEC, &_::IMP },{ "AND", &_::AND, &_::ABY },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "???", &_::NOP, &_::IMP },{ "AND", &_::AND, &_::ABX },{ "ROL", &_::ROL, &_::ABX },{ "???", &_::NOP, &_::IMP },

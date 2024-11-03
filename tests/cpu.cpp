@@ -1692,3 +1692,27 @@ TEST(PLP, Implied) {
 
   HK_TEST(cpu.getFlag() == cpu.getFlag());
 }
+
+TEST(HLT, Implied) {
+  constexpr cpu6502 cpu = [] {
+    cpu6502 cpu;
+    // ADC #$01
+    // ADC #$01
+    // ADC #$01
+    // .byt $20 ; HLT
+
+    cpu.load_program({0x69, 0x01, 0x69, 0x01, 0x69, 0x01, 0x20});
+    cpu.A = 0x10;
+    cpu.exec_until_hlt();
+    return cpu;
+  }();
+
+  HK_TEST(cpu.A == 0x13);
+  HK_TEST(cpu.C == false);
+  HK_TEST(cpu.Z == false);
+  HK_TEST(cpu.I == false);
+  HK_TEST(cpu.D == false);
+  HK_TEST(cpu.B == false);
+  HK_TEST(cpu.V == false);
+  HK_TEST(cpu.N == false);
+}

@@ -1,5 +1,19 @@
 # 6502-constexpr
 
+## Extended Instruction Set
+
+### HLT (0x20) - 1 byte
+
+When using `exec_until_hlt()`, it halts the machine. Otherwise does nothing.
+
+#### Usage
+
+```asm
+ADC #$01
+...
+.byt $20 ; HLT
+```
+
 ## Using `scripts/asm2arr.py`
 
 ```bash
