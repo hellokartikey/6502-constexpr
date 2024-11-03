@@ -5,6 +5,12 @@ target_link_libraries(
   fmt::fmt
 )
 
+target_include_directories(
+  6502++
+  INTERFACE
+  ${PROJECT_SOURCE_DIR}/src
+)
+
 target_sources(6502++
 PUBLIC
   common.h

@@ -6,12 +6,6 @@ target_link_libraries(
   6502++
 )
 
-target_include_directories(
-  test_6502
-PRIVATE
-  ${PROJECT_SOURCE_DIR}/src
-)
-
 target_sources(
   test_6502
 PRIVATE
