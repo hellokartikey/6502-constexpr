@@ -44,7 +44,7 @@ class cpu6502 {
   }
 
   constexpr auto load_program(instructions program) -> void {
-    word addr = 0;
+    word addr = 0x1000;
     for (const auto &byte : program) {
       write(addr++, byte);
     }
@@ -566,7 +566,7 @@ class cpu6502 {
   byte X = 0x00;
   byte Y = 0x00;
 
-  word PC = 0x0000;
+  word PC = 0x1000;
   byte SP = 0x00;
 
   bool N = false;
