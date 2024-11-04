@@ -1,0 +1,89 @@
+*=$0000
+ml:
+*=$0001
+mh:
+*=$0002
+pl:
+*=$0003
+ph:
+*=$0004
+cl:
+*=$0005
+ch:
+*=$0006
+nl:
+*=$0007
+nh:
+
+*=$1200
+start
+
+*=$1000
+  LDA #$00
+  STA start
+  STA start+1
+  INX
+
+  LDA #$01
+  STA start+2
+  LDA #$00
+  STA start+3
+
+  LDA #$00
+  STA pl
+  STA ph
+
+  LDA #$01
+  STA cl
+  LDA #$00
+  STA ch
+
+  LDA #$04
+  STA ml
+  LDA #$12
+  STA mh
+
+loop:
+  ; adding
+  CLC
+  LDA pl
+  ADC cl
+  STA nl
+  LDA ph
+  ADC ch
+  STA nh
+
+  ; inserting into proper memory location
+  LDY #$00
+  LDA nl
+  STA (ml), Y
+  INY
+  LDA nh
+  STA (ml), Y
+
+  ; moving
+  LDA cl
+  STA pl
+  LDA ch
+  STA ph
+  LDA nl
+  STA cl
+  LDA nh
+  STA ch
+
+  CLC
+  LDA ml
+  ADC #$02
+  STA ml
+  LDA mh
+  ADC #$00
+  STA mh
+
+  LDA mh
+  CMP #$ff
+  BCS out
+
+  jmp loop
+
+out:
+.byt $02
